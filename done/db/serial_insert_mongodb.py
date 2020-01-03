@@ -12,21 +12,6 @@ import serial
 import pymongo
 import time
 
-class Insert:
-    serial_str = ""
-    insert_dict = {}
-    value = 0
-
-    def __init__(self, s):
-        self.serial_str = s
-    
-    def trans_data(self):
-        self.value = float(self.serial_str.split(' ')[1])
-        pass
-
-    def insert(self):
-        pass
-
 wlMAX = 1000
 ehMAX = 700
 ehMIN = 300

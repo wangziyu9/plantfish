@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!-- 引入 ECharts 文件 -->
+    <!-- <script src="/static/echarts.js"></script> -->
+    <script src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/echarts.js"></script>
+    <script src="../static/echarts-liquidfill.js"></script>
+    <script src="../static/switch/highlight.js"></script>
+    <script src="../static/switch/switch.js"></script>
+    <script src="../static/bootstrap.js"></script>
+    <script src="../static/switch/bootstrap-switch.js"></script>
+    <link href="../static/switch/highlight.css" rel="stylesheet">
+    <link href="../static/switch/switch.css" rel="stylesheet">
+    <link href="../static/bootstrap.css" rel="stylesheet">
+    <link href="../static/switch/bootstrap-switch.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">自动浇水装置</a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="./main.html">概览</a></li>
+                    <li class="active"><a href="//watering.html#">浇水</a></li>
+                    <li><a href="./config.html">配置</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin:60px 0 30px 0">控制浇水</h1>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">手动控制</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                自定义 <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="watering_10"> 浇 10 秒 </a></li>
+                                <li><a href="watering_30"> 浇 30 秒 </a></li>
+                                <li><a href="watering_60"> 浇 60 秒 </a></li>
+                            </ul>
+                        </div>
+                        <a class="btn btn-success" href="/watering_once" role="button">浇水一次</a>
+                        <a class="btn btn-warning" href="/watering_off" role="button">立即停止</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">自动浇水</h3>
+                    </div>
+                    <div class="panel-body">
+                        <input id="mySwitch" type="checkbox" checked="checked">
+                    </div>
+                </div>
+            </div><!-- /.col-sm- -->
+        </div>
+
+        <div>
+            <div class="col-md-5">
+                <div class="body" id="cart_water_level" style="width: 100%;height: 480px;"> </div>
+            </div>
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-6">
+                <div class="body" id="chart_humidity" style="width: 100%;height: 480px;"> </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.container -->
+
+    <script type="text/javascript">
+        window.prettyPrint && prettyPrint();
+        $(document).ready(
+            function () {
+                $.get("/watering_state", function (data) {
+                    // $("div").html(result);
+                    console.log(data);
+                    if (data === "false")
+                        $('#mySwitch').bootstrapSwitch('state', true);
+                    if (data === "false")
+                        $('#mySwitch').bootstrapSwitch('state', false);
+                });
+            })
+
+        $('#mySwitch').on('switchChange.bootstrapSwitch', function (event, state) {
+            console.log(this); // DOM element
+            console.log(event); // jQuery event
+            console.log(state); // true | false
+            $.post("/watering_state", { "watering_state": state }, function (data) { console.log(data) });
+        });
+        var app = {};
+        // 基于准备好的dom，初始化echarts实例
+        var myChart_water_level = echarts.init(document.getElementById('cart_water_level'));
+        var value = 0 //0-1
+        var wl_data = []
+        wl_data.push(value)
+        wl_data.push(value)
+        wl_data.push(value)
+        wl_data.push(value)
+        wl_data.push(value)
+        // 指定图表的配置项和数据
+        // 使用刚指定的配置项和数据显示图表。
+
+        var option_water_level = {
+            title: {
+                text: '剩余水量',
+                textStyle: {
+                    fontWeight: 'normal',
+                    fontSize: 25,
+                    color: 'rgb(97, 142, 205)'
+                }
+            },
+            series: [{
+                name: '剩余水量',
+                type: 'liquidFill',
+                radius: '80%',
+                data: wl_data,
+                backgroundStyle: {
+                    borderWidth: 5,
+                    borderColor: 'rgb(97, 142, 205)',
+                    color: 'rgb(255,0,255,0.01)'
+                },
+                label: {
+                    normal: {
+                        formatter: value * 100 + '%',
+                        textStyle: {
+                            fontSize: 50
+                        }
+                    }
+                }
+            }]
+        }
+        myChart_water_level.setOption(option_water_level);
+
+        // 基于准备好的dom，初始化echarts实例
+        var myChart_humidity = echarts.init(document.getElementById('chart_humidity'));
+        option_humidity = {
+            title: {
+                text: '土壤湿度',
+                textStyle: {
+                    fontWeight: 'normal',
+                    fontSize: 25,
+                    color: 'rgb(97, 142, 205)'
+                }
+            },
+            backgroundColor: "#ffffff",
+            color: [ "#37A2DA", "#67E0E3", "#32C5E9"],
+            series: [{
+                name: '土壤湿度',
+                type: 'gauge',
+                detail: {
+                    formatter: function (value) {
+                        return value;
+                    },
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        width: 30,
+                        shadowBlur: 0,
+                        color: [
+                            [0.3, '#fd666d'],
+                            [0.7, '#67e0e3'],
+                            [1, '#37a2da']
+                        ]
+                    }
+                },
+                data: [{
+                    value: 50,
+                    name: '湿度',
+                }]
+
+            }]
+        };
+        myChart_humidity.setOption(option_humidity);
+
+        app.timeTicket = setInterval(function () {
+            $.post("/data", function (data) {
+                // jsn = JSON.parse(data)
+                // option_humidity.series[0].data[0].value = ((Math.random() * 4000 * 100) / 4000).toFixed(2) - 0;
+                option_humidity.series[0].data[0].value = data.earth_humidity_now;
+                myChart_humidity.setOption(option_humidity, true);
+
+                value = data.water_level_ultrasonic_now;
+                for (var j = 0, len = wl_data.length; j < len; j++) {
+                    wl_data[j] = data.water_level_ultrasonic_now / 100;
+                    // console.log(wl_data[j]);
+                }
+                option_water_level.series[0].data = wl_data;
+                option_water_level.series[0].label.normal.formatter = data.water_level_ultrasonic_now + '%';
+                myChart_water_level.setOption(option_water_level, true);
+            });
+        }, 2000);
+
+        window.addEventListener("resize", function () {
+            myChart_water_level.resize();
+            myChart_humidity.resize();
+        });
+    </script>
+</body>
